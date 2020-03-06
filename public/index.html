@@ -1,0 +1,27 @@
+<html>
+
+<head>
+  <title>Opencv-express</title>
+  <link rel="stylesheet" href="/stylesheets/style.css">
+</head>
+
+<body>
+  <p>Opencv with express</p>
+  <img name='live-stream' src="">
+  <img name='transformed-stream' src="">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
+  <script>
+    const socket = io.connect('http://localhost:3000');
+    const liveStream = document.querySelector('img[name=live-stream]');
+    const transformedStream = document.querySelector('img[name=transformed-stream]');
+    socket.on('new-frame', (stream) => {
+      if(stream.copyImage){
+        liveStream.src = `data:image/jpg;base64,${stream.copyImage}`;
+      }  else if(stream.original){
+        transformedStream.src = `data:image/jpg;base64,${stream.original}`;
+      }
+    });
+  </script>
+</body>
+</html>
