@@ -1,11 +1,13 @@
 const socketIOProvider = require("socket.io");
 const cv = require("opencv4nodejs");
+const path = require('path');
 
 const fps = 30; //frames per second
 /**
  * video source set to 0 for stream from webcam
  */
 const videoSource = 0;
+// const videoSource = path.resolve(path.resolve(__dirname, '../data'), 'people.mp4');
 const videoCap = new cv.VideoCapture(videoSource);
 videoCap.set(cv.CAP_PROP_FRAME_WIDTH, 600);
 videoCap.set(cv.CAP_PROP_FRAME_HEIGHT, 600);

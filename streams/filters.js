@@ -1,5 +1,7 @@
 const socketIO = require("socket.io");
 const cv = require("opencv4nodejs");
+const path = require('path');
+const { getImencode, getImage } = require('../common/index');
 
 const getFilter2D = () => {
   const rows = 3;
@@ -9,7 +11,7 @@ const getFilter2D = () => {
 
   const kernel = cv.getStructuringElement(shape, kernelSize);
 
-  const img = cv.imread("./apple.jpg");
+  const img = getImage(path.join(__dirname, '../data/apple.jpg'));
   const copy = img.copy();
   const filteredImg = copy.filter2D(-1, kernel);
 
@@ -17,7 +19,7 @@ const getFilter2D = () => {
 };
 
 const getBlur = () => {
-  const img = cv.imread("./apple.jpg");
+  const img = getImage(path.join(__dirname, '../data/apple.jpg'));
   const copy = img.copy();
 
   const bluredImg = copy.blur(new cv.Size(5, 5));
@@ -26,49 +28,41 @@ const getBlur = () => {
 };
 
 const getDilateAndErodeImgs = () => {
-  const img = cv.imread("./kubick.png");
+  const img = getImage(path.join(__dirname, '../data/kubick.png'));
   const copy = img.copy();
   const point = new cv.Point(-1, -1);
 
   const dilatedImg = copy.dilate(new cv.Mat(), point, 4, cv.BORDER_CONSTANT);
   const erodedImg = copy.erode(new cv.Mat(), point, 4, cv.BORDER_CONSTANT);
 
-  return { dilatedImg, erodedImg };
+  return { copy: dilatedImg, img: erodedImg };
 };
 
-const getMorphologyEx = (morphType1, morphType2) => {
+const getMorphologyEx = () => {
   const rows = 4;
   const cols = 4;
   const kernelSize = new cv.Size(cols, rows);
+  const morphTypes = [cv.MORPH_OPEN, cv.MORPH_CLOSE, cv.MORPH_GRADIENT, cv.MORPH_TOPHAT, cv.MORPH_BLACKHAT];
 
-  const img = cv.imread("./kubick.png");
+  const img = getImage(path.join(__dirname, '../data/kubick.png'));
   const copy = img.copy();
 
-  const kernel1 = cv.getStructuringElement(cv.MORPH_RECT, kernelSize);
-  const kernel2 = cv.getStructuringElement(cv.MORPH_RECT, kernelSize);
+  const kernel = cv.getStructuringElement(cv.MORPH_RECT, kernelSize);
 
-  const point = new cv.Point(-1, -1);
+  const point = new cv.Point2(-1, -1);
 
-  const morphologyEx1 = copy.morphologyEx(
-    kernel1,
-    morphType1,
-    point,
-    1,
-    cv.BORDER_CONSTANT
-  );
-  const morphologyEx2 = copy.morphologyEx(
-    kernel2,
-    morphType2,
-    point,
-    1,
-    cv.BORDER_CONSTANT
-  );
-
-  return { morphologyEx1, morphologyEx2 };
+  return morphTypes.map(type =>
+    copy.morphologyEx(
+      kernel,
+      type,
+      point,
+      1,
+      cv.BORDER_CONSTANT
+    ));
 };
 
 const getSobel = () => {
-  const img = cv.imread("./kubick.png");
+  const img = getImage(path.join(__dirname, '../data/kubick.png'));
   const copy = img.copy();
 
   const gausianBlur = copy.gaussianBlur(
@@ -87,11 +81,11 @@ const getSobel = () => {
   // const gradX = xGradAbs.addWeighted(0.5, xGradAbs, 0.5, 0);
   // const gradY = yGradAbs.addWeighted(0.5, yGradAbs, 0.5, 0);
 
-  return { xGradAbs, yGradAbs };
+  return { copy: xGradAbs, img: yGradAbs };
 };
 
 const getLaplasian = () => {
-  const img = cv.imread("./apple.jpg");
+  const img = getImage(path.join(__dirname, '../data/apple.jpg'));
   const copy = img.copy();
 
   const gausianBlur = copy.gaussianBlur(
@@ -110,7 +104,8 @@ const getLaplasian = () => {
 const getCanny = () => {
   const lowThreshold = 70;
   const uppThreshold = 260;
-  const img = cv.imread("./kubick.png");
+  const img = getImage(path.join(__dirname, '../data/kubick.png'));
+
   const copy = img.copy();
 
   const blurImg = copy.blur(new cv.Size(3, 3));
@@ -121,7 +116,8 @@ const getCanny = () => {
 };
 
 const getHistogram = () => {
-  const img = cv.imread("./javascript.jpg");
+  const img = getImage(path.join(__dirname, '../data/javascript.jpg'));
+
   const copy = img.copy();
   const kBins = 256;
   const histWidth = 512;
@@ -134,85 +130,38 @@ const getHistogram = () => {
     new cv.Vec(0, 0, 255)
   ];
 
-  const getHistAxis = channel => [
-    {
-      channel,
-      bins: kBins,
-      ranges: [0, 256]
-    }
-  ];
+  const getHistAxis = channel => [{ channel, bins: kBins, ranges: [0, 256] }];
 
   const bHist = cv.calcHist(copy, getHistAxis(0));
   const gHist = cv.calcHist(copy, getHistAxis(1));
   const rHist = cv.calcHist(copy, getHistAxis(2));
 
-  const histImg = new cv.Mat(
-    histHeight,
-    histWidth,
-    cv.CV_8UC3,
-    new cv.Vec(0, 0, 0)
-  );
+  const histImg = new cv.Mat(histHeight, histWidth, cv.CV_8UC3, new cv.Vec(0, 0, 0));
 
-  const bHistNorm = bHist.normalize(
-    0,
-    histImg.rows,
-    cv.NORM_MINMAX,
-    -1,
-    new cv.Mat()
-  );
-  const gHistNorm = gHist.normalize(
-    0,
-    histImg.rows,
-    cv.NORM_MINMAX,
-    -1,
-    new cv.Mat()
-  );
-  const rHistNorm = rHist.normalize(
-    0,
-    histImg.rows,
-    cv.NORM_MINMAX,
-    -1,
-    new cv.Mat()
-  );
+  const bHistNorm = bHist.normalize(0, histImg.rows, cv.NORM_MINMAX, -1, new cv.Mat());
+  const gHistNorm = gHist.normalize(0, histImg.rows, cv.NORM_MINMAX, -1, new cv.Mat());
+  const rHistNorm = rHist.normalize(0, histImg.rows, cv.NORM_MINMAX, -1, new cv.Mat());
 
   for (let i = 1; i < kBins; i++) {
     histImg.drawLine(
-      new cv.Point2(
-        binWidth * (i - 1),
-        histHeight - Number.parseFloat(bHistNorm.at(i - 1))
-      ),
-      new cv.Point2(
-        binWidth * i,
-        histHeight - Number.parseFloat(bHistNorm.at(i))
-      ),
+      new cv.Point2(binWidth * (i - 1), histHeight - Number.parseFloat(bHistNorm.at(i - 1))),
+      new cv.Point2(binWidth * i, histHeight - Number.parseFloat(bHistNorm.at(i))),
       colors[0],
       2,
       8,
       0
     );
     histImg.drawLine(
-      new cv.Point2(
-        binWidth * (i - 1),
-        histHeight - Number.parseFloat(gHistNorm.at(i - 1))
-      ),
-      new cv.Point2(
-        binWidth * i,
-        histHeight - Number.parseFloat(gHistNorm.at(i))
-      ),
+      new cv.Point2(binWidth * (i - 1), histHeight - Number.parseFloat(gHistNorm.at(i - 1))),
+      new cv.Point2(binWidth * i, histHeight - Number.parseFloat(gHistNorm.at(i))),
       colors[1],
       2,
       8,
       0
     );
     histImg.drawLine(
-      new cv.Point2(
-        binWidth * (i - 1),
-        histHeight - Number.parseFloat(rHistNorm.at(i - 1))
-      ),
-      new cv.Point2(
-        binWidth * i,
-        histHeight - Number.parseFloat(rHistNorm.at(i))
-      ),
+      new cv.Point2(binWidth * (i - 1), histHeight - Number.parseFloat(rHistNorm.at(i - 1))),
+      new cv.Point2(binWidth * i, histHeight - Number.parseFloat(rHistNorm.at(i))),
       colors[2],
       2,
       8,
@@ -231,7 +180,7 @@ const getHistogram = () => {
 };
 
 const getEqualizedHistogram = () => {
-  const img = cv.imread("./javascript.jpg");
+  const img = getImage(path.join(__dirname, '../data/javascript.jpg'));
   const copy = img.copy();
 
   const grayImg = copy.cvtColor(cv.COLOR_RGB2GRAY);
@@ -242,39 +191,45 @@ const getEqualizedHistogram = () => {
 
 const stream = server => {
   const io = socketIO(server);
-  // const { copy, img } = getFilter2D();
-  // const { copy, img } = getBlur();
-  // const { dilatedImg: copy, erodedImg: img } = getDilateAndErodeImgs();
-  // const { morphologyEx1: copy, morphologyEx2: img } = getMorphologyEx(
-  //   cv.MORPH_OPEN,
-  //   cv.MORPH_CLOSE
-  // );
-  // const { morphologyEx1: copy, morphologyEx2: img } = getMorphologyEx(
-  //   cv.MORPH_GRADIENT,
-  //   cv.MORPH_TOPHAT
-  // );
-  // const { morphologyEx1: copy, morphologyEx2: img } = getMorphologyEx(
-  //   cv.MORPH_BLACKHAT
-  // );
 
-  // const { xGradAbs: copy, yGradAbs: img } = getSobel();
-  // const { copy, img } = getLaplasian();
-  // const { copy, img } = getCanny();
-  // const { copy, img } = getHistogram();
-  const { copy, img } = getEqualizedHistogram();
+  const source= getFilter2D();
+  // const source = getBlur();
+  // const source = getDilateAndErodeImgs();
+  // const source = getMorphologyEx();
+  // const source = getSobel();
+  // const source = getLaplasian();
+  // const source = getCanny();
+  // const source = getHistogram();
+  // const source = getEqualizedHistogram();
 
-  const copyImage = cv.imencode(".jpg", copy).toString("base64");
-  const originalImage = cv.imencode(".jpg", img).toString("base64");
+  if (!Array.isArray(source)) {
+    const copyImage = getImencode(source.copy);
+    const originalImage = getImencode(source.img);
 
-  io.on("connection", socket => {
-    socket.emit("new-frame", { copyImage: copyImage });
-    socket.emit("new-frame", { original: originalImage });
+    io.on("connection", socket => {
+      socket.emit("new-frame", { copyImage: copyImage });
+      socket.emit("new-frame", { original: originalImage });
 
-    socket.on("disconnect", function() {
-      copy.release();
-      img.release();
+      socket.on("disconnect", function () {
+        source.copy.release();
+        source.img.release();
+      });
     });
-  });
+  }
+
+  if (Array.isArray(source)) {
+    source.map(i => {
+      const copyImage = getImencode(i);
+
+      io.on("connection", socket => {
+        socket.emit("new-frame", { morphologyEx: copyImage });
+
+        socket.on("disconnect", function () {
+          i.release();
+        });
+      });
+    })
+  }
 };
 
 module.exports = stream;
