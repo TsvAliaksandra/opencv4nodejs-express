@@ -1,7 +1,7 @@
 const socketIO = require("socket.io");
 const cv = require("opencv4nodejs");
-const path = require('path');
-const { getImencode, getImage } = require('../common/index');
+const path = require("path");
+const { getImencode, getImage } = require("../common/index");
 
 const getFilter2D = () => {
   const rows = 3;
@@ -11,7 +11,7 @@ const getFilter2D = () => {
 
   const kernel = cv.getStructuringElement(shape, kernelSize);
 
-  const img = getImage(path.join(__dirname, '../data/apple.jpg'));
+  const img = getImage(path.join(__dirname, "../data/kubick.jpg"));
   const copy = img.copy();
   const filteredImg = copy.filter2D(-1, kernel);
 
@@ -19,7 +19,7 @@ const getFilter2D = () => {
 };
 
 const getBlur = () => {
-  const img = getImage(path.join(__dirname, '../data/apple.jpg'));
+  const img = getImage(path.join(__dirname, "../data/kubick.jpg"));
   const copy = img.copy();
 
   const bluredImg = copy.blur(new cv.Size(5, 5));
@@ -28,12 +28,12 @@ const getBlur = () => {
 };
 
 const getDilateAndErodeImgs = () => {
-  const img = getImage(path.join(__dirname, '../data/kubick.png'));
+  const img = getImage(path.join(__dirname, "../data/kubick_ch_b.jpg"));
   const copy = img.copy();
   const point = new cv.Point(-1, -1);
 
-  const dilatedImg = copy.dilate(new cv.Mat(), point, 4, cv.BORDER_CONSTANT);
-  const erodedImg = copy.erode(new cv.Mat(), point, 4, cv.BORDER_CONSTANT);
+  const dilatedImg = copy.dilate(new cv.Mat(), point, 1, cv.BORDER_CONSTANT);
+  const erodedImg = copy.erode(new cv.Mat(), point, 1, cv.BORDER_CONSTANT);
 
   return { copy: dilatedImg, img: erodedImg };
 };
@@ -42,9 +42,15 @@ const getMorphologyEx = () => {
   const rows = 4;
   const cols = 4;
   const kernelSize = new cv.Size(cols, rows);
-  const morphTypes = [cv.MORPH_OPEN, cv.MORPH_CLOSE, cv.MORPH_GRADIENT, cv.MORPH_TOPHAT, cv.MORPH_BLACKHAT];
+  const morphTypes = [
+    cv.MORPH_OPEN,
+    cv.MORPH_CLOSE,
+    cv.MORPH_GRADIENT,
+    cv.MORPH_TOPHAT,
+    cv.MORPH_BLACKHAT
+  ];
 
-  const img = getImage(path.join(__dirname, '../data/kubick.png'));
+  const img = getImage(path.join(__dirname, "../data/kubick.jpg"));
   const copy = img.copy();
 
   const kernel = cv.getStructuringElement(cv.MORPH_RECT, kernelSize);
@@ -52,17 +58,12 @@ const getMorphologyEx = () => {
   const point = new cv.Point2(-1, -1);
 
   return morphTypes.map(type =>
-    copy.morphologyEx(
-      kernel,
-      type,
-      point,
-      1,
-      cv.BORDER_CONSTANT
-    ));
+    copy.morphologyEx(kernel, type, point, 1, cv.BORDER_CONSTANT)
+  );
 };
 
 const getSobel = () => {
-  const img = getImage(path.join(__dirname, '../data/kubick.png'));
+  const img = getImage(path.join(__dirname, "../data/kubick.jpg"));
   const copy = img.copy();
 
   const gausianBlur = copy.gaussianBlur(
@@ -78,14 +79,14 @@ const getSobel = () => {
   const xGradAbs = xGrad.convertScaleAbs();
   const yGradAbs = yGrad.convertScaleAbs();
 
-  // const gradX = xGradAbs.addWeighted(0.5, xGradAbs, 0.5, 0);
-  // const gradY = yGradAbs.addWeighted(0.5, yGradAbs, 0.5, 0);
+  const gradX = xGradAbs.addWeighted(0.5, xGradAbs, 0.5, 0);
+  const gradY = yGradAbs.addWeighted(0.5, yGradAbs, 0.5, 0);
 
-  return { copy: xGradAbs, img: yGradAbs };
+  return { copy: gradX, img: gradY };
 };
 
 const getLaplasian = () => {
-  const img = getImage(path.join(__dirname, '../data/apple.jpg'));
+  const img = getImage(path.join(__dirname, "../data/kubick_ch_b.jpg"));
   const copy = img.copy();
 
   const gausianBlur = copy.gaussianBlur(
@@ -104,8 +105,7 @@ const getLaplasian = () => {
 const getCanny = () => {
   const lowThreshold = 70;
   const uppThreshold = 260;
-  const img = getImage(path.join(__dirname, '../data/kubick.png'));
-
+  const img = getImage(path.join(__dirname, "../data/kubick_ch_b.jpg"));
   const copy = img.copy();
 
   const blurImg = copy.blur(new cv.Size(3, 3));
@@ -116,14 +116,15 @@ const getCanny = () => {
 };
 
 const getHistogram = () => {
-  const img = getImage(path.join(__dirname, '../data/javascript.jpg'));
-
+  const img = getImage(path.join(__dirname, "../data/javascript.jpg"));
   const copy = img.copy();
+
   const kBins = 256;
   const histWidth = 512;
   const histHeight = 400;
 
   const binWidth = Number.parseFloat(histWidth / kBins);
+  
   const colors = [
     new cv.Vec(255, 0, 0),
     new cv.Vec(0, 255, 0),
@@ -136,7 +137,12 @@ const getHistogram = () => {
   const gHist = cv.calcHist(copy, getHistAxis(1));
   const rHist = cv.calcHist(copy, getHistAxis(2));
 
-  const histImg = new cv.Mat(histHeight, histWidth, cv.CV_8UC3, new cv.Vec(0, 0, 0));
+  const histImg = new cv.Mat(
+    histHeight,
+    histWidth,
+    cv.CV_8UC3,
+    new cv.Vec(0, 0, 0)
+  );
 
   const bHistNorm = bHist.normalize(0, histImg.rows, cv.NORM_MINMAX, -1, new cv.Mat());
   const gHistNorm = gHist.normalize(0, histImg.rows, cv.NORM_MINMAX, -1, new cv.Mat());
@@ -169,18 +175,11 @@ const getHistogram = () => {
     );
   }
 
-  // cv.plot1DHist(bHist, plot, colors[0], 2);
-  // cv.plot1DHist(gHist, plot, colors[1], 2);
-  // cv.plot1DHist(rHist, plot, colors[2], 2);
-
-  // const bHist = cv.calcHist(bgrChannels[0],)
-  // cv.imshow("histogram", img);
-
   return { copy: histImg, img };
 };
 
 const getEqualizedHistogram = () => {
-  const img = getImage(path.join(__dirname, '../data/javascript.jpg'));
+  const img = getImage(path.join(__dirname, "../data/javascript.jpg"));
   const copy = img.copy();
 
   const grayImg = copy.cvtColor(cv.COLOR_RGB2GRAY);
@@ -192,7 +191,7 @@ const getEqualizedHistogram = () => {
 const stream = server => {
   const io = socketIO(server);
 
-  const source= getFilter2D();
+  const source = getFilter2D();
   // const source = getBlur();
   // const source = getDilateAndErodeImgs();
   // const source = getMorphologyEx();
@@ -210,7 +209,7 @@ const stream = server => {
       socket.emit("new-frame", { copyImage: copyImage });
       socket.emit("new-frame", { original: originalImage });
 
-      socket.on("disconnect", function () {
+      socket.on("disconnect", function() {
         source.copy.release();
         source.img.release();
       });
@@ -224,11 +223,11 @@ const stream = server => {
       io.on("connection", socket => {
         socket.emit("new-frame", { morphologyEx: copyImage });
 
-        socket.on("disconnect", function () {
+        socket.on("disconnect", function() {
           i.release();
         });
       });
-    })
+    });
   }
 };
 

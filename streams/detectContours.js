@@ -1,10 +1,10 @@
 const socketIO = require("socket.io");
 const cv = require("opencv4nodejs");
-const path = require('path');
-const { getImencode, getImage } = require('../common/index');
+const path = require("path");
+const { getImencode, getImage } = require("../common/index");
 
 const getImages = () => {
-  const img = getImage(path.join(__dirname, '../data/apple.jpg'));
+  const img = getImage(path.join(__dirname, "../data/apple.jpg"));
   const copy = img.copy();
   const gray = img.cvtColor(cv.COLOR_BGR2GRAY);
   const grayThresh = gray.threshold(120, 255, cv.THRESH_BINARY);
@@ -20,9 +20,6 @@ const getImages = () => {
 
   copy.drawContours(imgContours, -1, blueColor, { thickness: 2 });
 
-  gray.release();
-  grayThresh.release();
-
   return { copy, img };
 };
 
@@ -37,7 +34,7 @@ const stream = server => {
     socket.emit("new-frame", { original: originalImage });
     socket.emit("new-frame", { copyImage: copyImage });
 
-    socket.on("disconnect", function () {
+    socket.on("disconnect", function() {
       copy.release();
       img.release();
     });

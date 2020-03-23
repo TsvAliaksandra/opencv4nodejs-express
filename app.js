@@ -3,7 +3,7 @@ const http = require("http");
 const path = require("path");
 const cookieParser = require("cookie-parser");
 const detectContoursStream = require("./streams/detectContours");
-// const faceDetectionStream = require("./streams/faceDetection");
+const faceDetectionStream = require("./streams/faceDetection");
 const filtersStream = require("./streams/filters");
 const machineLearnigStream = require("./streams/machineLearnig");
 const bagOfWordsStream = require("./streams/bagOfWords");
@@ -25,10 +25,10 @@ app.get("/detect-contours", (req, res) => {
   res.sendFile(`${STATIC_PATH}/index.html`);
 });
 
-// app.get("/face-detection", (req, res) => {
-//   faceDetectionStream(server);
-//   res.sendFile(`${STATIC_PATH}/index.html`);
-// });
+app.get("/face-detection", (req, res) => {
+  faceDetectionStream(server);
+  res.sendFile(`${STATIC_PATH}/index.html`);
+});
 
 app.get("/filters", (req, res) => {
   filtersStream(server);
