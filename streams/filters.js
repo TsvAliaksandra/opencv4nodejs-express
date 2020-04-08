@@ -188,18 +188,36 @@ const getEqualizedHistogram = () => {
   return { copy: equalizedImg, img: grayImg };
 };
 
-const stream = server => {
+const getSource = url =>{
+  switch(url) {
+    case '/filters/2D':
+      return getFilter2D();
+    case '/filters/blur':
+      return getBlur();
+    case '/filters/dilate-and-erode':
+      return getDilateAndErodeImgs();
+    case '/filters/morphology':
+      return getMorphologyEx();
+    case '/filters/sobel':
+      return getSobel();
+    case '/filters/laplasian':
+      return getLaplasian();
+    case '/filters/canny':
+      return getCanny();
+    case '/filters/histogram':
+      return getHistogram();
+    case '/filters/equalized-image':
+      return getEqualizedHistogram();
+
+    default:
+      return filter2D();
+  }
+}
+
+const stream = (server, url) => {
   const io = socketIO(server);
 
-  const source = getFilter2D();
-  // const source = getBlur();
-  // const source = getDilateAndErodeImgs();
-  // const source = getMorphologyEx();
-  // const source = getSobel();
-  // const source = getLaplasian();
-  // const source = getCanny();
-  // const source = getHistogram();
-  // const source = getEqualizedHistogram();
+  const source = getSource(url);
 
   if (!Array.isArray(source)) {
     const copyImage = getImencode(source.copy);

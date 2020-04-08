@@ -8,6 +8,7 @@ const filtersStream = require("./streams/filters");
 const machineLearnigStream = require("./streams/machineLearnig");
 const bagOfWordsStream = require("./streams/bagOfWords");
 const HOGDescriptorForImageStream = require("./streams/HOGDescriptorForImage");
+const objectDetectionStream = require("./streams/detectObjects");
 
 const port = process.env.PORT || 3000;
 const STATIC_PATH = path.join(__dirname, "public");
@@ -25,18 +26,13 @@ app.get("/detect-contours", (req, res) => {
   res.sendFile(`${STATIC_PATH}/index.html`);
 });
 
+app.get("/filters/*", (req, res) => {
+  filtersStream(server, req.url);
+  res.sendFile(`${STATIC_PATH}/index.html`);
+});
+
 app.get("/face-detection", (req, res) => {
   faceDetectionStream(server);
-  res.sendFile(`${STATIC_PATH}/index.html`);
-});
-
-app.get("/filters", (req, res) => {
-  filtersStream(server);
-  res.sendFile(`${STATIC_PATH}/index.html`);
-});
-
-app.get("/machine-learing", (req, res) => {
-  machineLearnigStream(server);
   res.sendFile(`${STATIC_PATH}/index.html`);
 });
 
@@ -45,8 +41,18 @@ app.get("/bag-of-words", (req, res) => {
   res.sendFile(`${STATIC_PATH}/index.html`);
 });
 
-app.get("/hog-descriptor", (req, res) => {
+app.get("/object-detection", (req, res) => {
+  objectDetectionStream(server);
+  res.sendFile(`${STATIC_PATH}/index.html`);
+});
+
+app.get("/people-detection", (req, res) => {
   HOGDescriptorForImageStream(server);
+  res.sendFile(`${STATIC_PATH}/index.html`);
+});
+
+app.get("/machine-learing", (req, res) => {
+  machineLearnigStream(server);
   res.sendFile(`${STATIC_PATH}/index.html`);
 });
 

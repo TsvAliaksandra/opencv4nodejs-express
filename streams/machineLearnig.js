@@ -5,8 +5,8 @@ const { getImencode, getImage } = require("../common/index");
 
 const f = sample => {
   return (
-    (sample.at(0) < 0.5 && sample.at(1) < 0.5) ||
-    (sample.at(0) > 0.5 && sample.at(1) > 0.5)
+    Number(sample[0] < 0.5 && sample[1] < 0.5) ||
+    Number(sample[0] > 0.5 && sample[1] > 0.5)
   );
 };
 
@@ -17,17 +17,49 @@ const trainSVM = () => {
   // объем обучающей части выборки
   const n1 = 1000;
 
-  // матрица признаковых описаний объектов
-  const samples = new cv.Mat(n, d, cv, cv.CV_32F);
-  // номера классов (матрица значений целевой переменной)
-  const labels = new cv.Mat(n, 1, cv.CV_32S);
+  let randSamples = [];
 
-  let trainSampleMask = [];
-  const a = new cv.Mat(1, n1, cv.CV_32S);
-  console.log(a.at(1));
+  for (let i = 0; i < n; ++i) {
+    randSamples.push(Array.from({ length: d }, () => Math.random() * 1));
+  }
+
+  // матрица признаковых описаний объектов
+  const samples = new cv.Mat(randSamples, cv.CV_32F);
+  let labelsCols = [];
+
+  for (let i = 0; i < n; ++i) {
+    labelsCols[i] = f(samples.row(i));
+  }
+
+  // номера классов (матрица значений целевой переменной)
+  const labels = new cv.Mat([labelsCols], cv.CV_32S);
+
+  const sampleMask = [...Array.from({ length: n1 }).keys()];
+  const trainedSamleMask = new cv.Mat([sampleMask], cv.CV_32S);
+
+  const trainData = new cv.TrainData(
+    samples,
+    cv.ml.ROW_SAMPLE,
+    labels,
+    new cv.Mat(),
+    trainedSamleMask
+  );
+  const svm = new cv.SVM({
+    c: 1,
+    gamma: 1,
+    kernelType: cv.ml.SVM.RBF
+  });
+
+  svm.train(trainData);
+  svm.save("model.yml", "simpleSVMModel");
+
+  const predictions = svm.predict(samples);
+  // const predictions = svm.predict(samples);
+
+  let trainError = [];
 
   // for (let i = 0; i < n1; ++i) {
-
+  //   // trainError += labels.at(i) !== predictions[i];
   // }
 };
 
@@ -37,7 +69,6 @@ const trainGBTrees = () => {};
 
 const stream = server => {
   trainSVM();
-  cv.feat
   // const io = socketIO(server);
   // const { copy, img } = getImages();
   // const copyImage = getImencode(copy);
