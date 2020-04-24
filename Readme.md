@@ -5,21 +5,21 @@ npm install
 npm start
 ```
 _Go to next pathes to reproduce:_
-1. `localhost:3000/detect-contours`
+1. `/detect-contours`
 2.  
-    - `localhost:3000/filters/2D`
-    - `localhost:3000/filters/blur`
-    - `localhost:3000/filters/dilate-and-erode`
-    - `localhost:3000/filters/morphology`
-    - `localhost:3000/filters/sobel`
-    - `localhost:3000/filters/laplasian`
-    - `localhost:3000/filters/canny`
-    - `localhost:3000/filters/histogram`
-    - `localhost:3000/filters/equalized-image`
-3. `localhost:3000/face-detection`
-4. `localhost:3000/bag-of-words`
-5. `localhost:3000/object-detection`
-6. `localhost:3000/people-detection`
+    - `/filters/2D`
+    - `/filters/blur`
+    - `/filters/dilate-and-erode`
+    - `/filters/morphology`
+    - `/filters/sobel`
+    - `/filters/laplasian`
+    - `/filters/canny`
+    - `/filters/histogram`
+    - `/filters/equalized-image`
+3. `/face-detection`
+4. `/bag-of-words`
+5. `/object-detection`
+6. `/people-detection`
 
 
 ## Built With
